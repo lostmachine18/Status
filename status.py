@@ -4,6 +4,10 @@ import pandas as pd
 import pingouin as pg
 import seaborn as sns
 import matplotlib.pyplot as plt
+import markdown
+from pathlib import Path
+
+from PIL import Image
 
 import streamlit_theme as stt
 
@@ -45,13 +49,13 @@ st.write(df)
 
 if not isinstance(df, str):
     describe_data = st.sidebar.checkbox("Display data report")
-    choose_analysis = st.sidebar.selectbox("Choose analysis to perform:", ("None", "Chi-square test", "Student t-test", "One-way ANOVA", "Repeated measure ANOVA", "Linear Regression", "Logistic regression", "K-nearest neighbors", "Decision trees", "Random forest", "Support vector machines", "Neural network"))
+    choose_analysis = st.sidebar.selectbox("Choose analysis to perform:", ("None", "Chi-square test", "Student t-test (Mann-Whitney)", "One-way ANOVA", "Repeated measure ANOVA", "Linear Regression", "Logistic regression", "Ridge, Lasso, Elastic net regression", "K-nearest neighbors", "Decision trees", "Random forest", "Support vector machines", "Naive Bayes", "Neural network", "Hierarchical Clusteting", "K-means Clustering", "Linear discriminant analysis", "Principal component analysis", "XGBoost"))
 
 if describe_data:
     pr = ProfileReport(df, explorative=True)
     st_profile_report(pr)
 
-if choose_analysis == "Student t-test":
+if choose_analysis == "Student t-test (Mann-Whitney)":
 
     numeric_vars = df.select_dtypes(include=np.number).columns.tolist()
     cat_vars = df.select_dtypes(include=np.object).columns.tolist()
@@ -66,12 +70,14 @@ if choose_analysis == "Student t-test":
     y_var = st.sidebar.selectbox("Choose grouping variable:", (new_cat))
 
     expand = st.sidebar.beta_expander("More options")
-    help_selected = expand.checkbox("Show additional help on t-test?")
+    param_vs_nonparam = expand.radio("Parametric or nonparametric tests?", ("Parametric tests (Student, Welch)", "Nonparametric (Mann-Whitney)"))
     normality_selected = expand.radio("Select normality test", ["Shapiro-Wilk", "Omnibus test of normality"])
     error_selected = expand.radio("Choose error bar to plot:", ["Standard error of the mean", "95% confidense intervals", "Standard deviation"])
     cap_selected = expand.checkbox("Plot caps on error bars")
+    show_boxplot = expand.checkbox("Show additional boxplots")
+    show_anova_roadmap = expand.checkbox("Show roadmap for means analysis")
 
-    st.header("Student t-test results:")
+    st.header("Difference in means between groups results:")
     st.success("Descriptive statistics are being calculated")
     function_dict = {x_var: ["mean", "std", "sem", "count"]}
     new = pd.DataFrame(df.groupby(y_var).aggregate(function_dict))
@@ -99,27 +105,35 @@ if choose_analysis == "Student t-test":
     homoscedasticity = pg.homoscedasticity(df, dv=x_var, group=y_var)
     st.write(homoscedasticity)
 
+    if param_vs_nonparam == "Parametric tests (Student, Welch)":
+        if homoscedasticity.loc["levene", "pval"] < 0.05:
+            test_message = "Welch test results:"
+        else:
+            test_message = "Student t-test results:"
 
-    if homoscedasticity.loc["levene", "pval"] < 0.05:
-        test_message = "Welch test results:"
+        st.success(test_message)
+        
+        t = pg.ttest(x1, x2)
+        st.write(t)
+
     else:
-         test_message = "Student t-test results:"
+        test_message = "Mann-Whitney test results:"
+        st.success(test_message)
 
-    st.success(test_message)
+        mw = pg.mwu(x1, x2)
+        st.write(mw)
     
-    
-    t = pg.ttest(x1, x2)
-    st.write(t)
-    if help_selected:
-        st.markdown("_ Please, note, that Welch test is performed when heteroscedasticity is observed. Student test is performed when variances are equal. _")
-        st.markdown(" _**T** is a Student statistic._")
-        st.markdown("_**dof** means degrees of freedom._")
-        st.markdown("_**tail** is usually set to two-sided which which that your hypothesis is tested in both directions._")
-        st.markdown("_**pval** is statistical significance. It's largely dependent on sample size._")
-        st.markdown("_**CI95%** are 95% confidence intervals for the test statistic._")
-        st.markdown("_**cohen-d** is an effect size. 0.2 means small effect, 0.5 - medium, 0.8 - large._")
-        st.markdown("_**power** is a statistical power of your test. More tha 80% is an acceptable rate._")
+   
+    md = markdown.Markdown()
+    ipsum_path = Path('Md/student_help.md')
 
+    data = ipsum_path.read_text(encoding='utf-8')
+    html = md.convert(data)
+    #help_markdown = util.read_markdown_file("help.md")
+    st.markdown(html, unsafe_allow_html=True)
+
+
+    
     st.markdown("## ")
     
     st.success("Bar plots with errors are being generated:")
@@ -132,14 +146,34 @@ if choose_analysis == "Student t-test":
     else:
         error =  "sd"
 
-    sns.barplot(x=y_var, y=x_var, data=df, ci=error , capsize=0.1 if cap_selected else 0)
+    ax = sns.barplot(x=y_var, y=x_var, data=df, ci=error , capsize=0.1 if cap_selected else 0, palette="Set2")
+    widthbars = [0.4, 0.4]
+    for bar, newwidth in zip(ax.patches, widthbars):
+        x = bar.get_x()
+        width = bar.get_width()
+        centre = x + width/2.
+        bar.set_x(centre - newwidth/2.)
+        bar.set_width(newwidth)
+    
     
     st.pyplot(fig)
+
+    if show_boxplot:
+        fig = plt.figure(figsize=(12, 6))
+        sns.boxplot(x=x_var, y=y_var, data=df, width=.3, orient="h", palette="Set2")
+        sns.stripplot(x=x_var, y=y_var, data=df, size=3, color=".3", linewidth=0)
+        st.pyplot(fig)
 
     st.header("Statistical methods being used:")
 
     st.markdown("Statistical analysis was performed using Status software (https://status-please.herokuapp.com/)")
     st.markdown("Shapiro-Wilk test was used to estimate the normal distribution of the data. Levene test was used to check for equality of variances.")
     st.markdown("Student t-test was used to estimate the difference in means between groups in case of homoscedasticity. Welch test was used when variances were not equal.")
+    st.markdown("Nonparametric Mann-Whitney test was used when data were not normally distributed.")
     st.markdown("Statistically significant results are considered with p-value < 0.05.")
 
+    if show_anova_roadmap:
+        image = Image.open("Images/anova.png")
+        st.image(image)
+
+   
