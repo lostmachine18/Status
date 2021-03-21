@@ -1,11 +1,14 @@
-import streamlit as st
+import pingouin as pg
+data = pg.read_dataset('chi2_independence')
 
-placeholder = st.empty()
-placeholder_slider = st.empty()
+import pandas as pd
 
-input = placeholder.text_input('text')
-click_clear = placeholder_slider.slider('clear text input')
-if click_clear:
-    input = placeholder.text_input('text', value=str(click_clear), key=1)
-if input:
-    click_clear = placeholder_slider.slider('clear text input', value=float(input), key=1)
+
+import seaborn as sns
+
+data = sns.load_dataset("tips")
+print(data.head())
+
+expected, observed, stats = pg.chi2_independence(data, x='sex', y='day')
+
+print(stats)

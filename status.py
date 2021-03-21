@@ -6,10 +6,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import markdown
 from pathlib import Path
-
 from PIL import Image
 
-import streamlit_theme as stt
+
 
 st.set_page_config(page_title="Status", layout="wide", initial_sidebar_state="expanded",)
 sns.set_style("white")
@@ -54,6 +53,37 @@ if not isinstance(df, str):
 if describe_data:
     pr = ProfileReport(df, explorative=True)
     st_profile_report(pr)
+
+if choose_analysis == "Chi-square test":
+    cat_vars = df.select_dtypes(include=np.object).columns.tolist()
+
+    y_var1 = st.sidebar.selectbox("Choose first categorical variable:", (cat_vars))
+    y_var2 = st.sidebar.selectbox("Choose second categorical variable:", (cat_vars))
+    expand = st.sidebar.beta_expander("More options")
+    yates_correction = expand.checkbox("Use Yates correction?")
+
+
+    st.header("Chi-sqaure test of independence:")
+    st.markdown("----")
+    st.success("Expected and observed frequences:")
+
+    expected, observed, stats = pg.chi2_independence(df, x=y_var1, y=y_var2, correction=True if yates_correction == True else False)
+    st.subheader("Expected")
+    st.write(expected)
+    st.subheader("Observed")
+    st.write(observed)
+    st.subheader("Chi-square test results:")
+    st.write(stats.loc[[0]])
+    st.markdown("----")
+
+    st.success("Frequency bars are generated:")
+    st.markdown("## ")
+    fig = plt.figure(figsize=(12, 6))
+    sns.countplot(x=y_var1, hue=y_var2, data=df, palette="Set2")
+    st.pyplot(fig)
+
+
+
 
 if choose_analysis == "Student t-test (Mann-Whitney)":
 
