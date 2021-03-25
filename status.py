@@ -11,6 +11,9 @@ from pandas_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
 from statannot import add_stat_annotation
 
+import openpyxl
+import xlrd
+
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from statsmodels.graphics.factorplots import interaction_plot
