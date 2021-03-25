@@ -49,7 +49,7 @@ if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
     except Exception as e:
         print(e)
-        df = pd.read_excel(uploaded_file)
+        df = pd.read_excel(uploaded_file, engine='openpyxl')
 
     df.columns = df.columns.str.strip()
     df.columns = df.columns.str.replace(" ", "_")
