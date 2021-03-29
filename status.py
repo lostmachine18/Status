@@ -10,6 +10,8 @@ from PIL import Image
 from pandas_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
 from statannot import add_stat_annotation
+from math import sqrt
+
 
 import openpyxl
 import xlrd
@@ -39,7 +41,6 @@ uploaded_file = st.sidebar.file_uploader(
                         label="Choose your data",
                         type=['csv', 'xlsx'])
 
-global df
 
 df = "To start your work, please choose the data!"
 
@@ -60,7 +61,7 @@ st.write(df)
 
 if not isinstance(df, str):
     describe_data = st.sidebar.checkbox("Display data report")
-    choose_analysis = st.sidebar.selectbox("Choose analysis to perform:", ("None", "Chi-square test", "Student t-test (Mann-Whitney)",
+    choose_analysis = st.sidebar.selectbox("Choose analysis to perform:", ("None", "Count test", "Chi-square test", "Student t-test (Mann-Whitney)",
                                              "One, Two-way ANOVA", "Non-parametric ANOVA", "Repeated measures mixed ANOVA", "Correlation", "Linear Regression", "Logistic regression", 
                                              "Ridge, Lasso, Elastic net regression", "K-nearest neighbors", "Decision trees", 
                                              "Random forest", "Support vector machines", "Naive Bayes", "Neural network", 
@@ -70,6 +71,19 @@ if not isinstance(df, str):
 if describe_data:
     pr = ProfileReport(df, explorative=True)
     st_profile_report(pr)
+
+
+if choose_analysis == "Count test":
+    x1 = st.sidebar.number_input("Enter counts for the 1st variable", 0, value=5, step=1)
+    x2 = st.sidebar.number_input("Enter counts for the 2nd variable", 0, value=10, step=1)
+
+    st.success("Difference between treatments results")
+
+    z = (int(x1) - int(x2)) / sqrt((int(x1) + int(x2)))
+    st.write(f"z-score = {z}")
+
+    p_value = "< 0.05" if abs(z) > 1.96 else "> 0.05"
+    st.write(f"Statistical significance p {p_value}")
 
 if choose_analysis == "Chi-square test":
     cat_vars = df.select_dtypes(include=np.object).columns.tolist()
