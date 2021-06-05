@@ -85,7 +85,7 @@ if choose_analysis == "Chi-square test":
     y_var2 = st.sidebar.selectbox("Choose second categorical variable:", cat_vars)
     expand = st.sidebar.beta_expander("More options")
     yates_correction = expand.checkbox("Use Yates correction?")
-    move_counts = expand.slider("Adjust labels for counts on bar plot", 0.0, 0.5, 0.15, 0.01)
+    # move_counts = expand.slider("Adjust labels for counts on bar plot", 0.0, 0.5, 0.15, 0.01)
 
     st.header("Chi-square test of independence:")
     st.markdown("----")
@@ -104,9 +104,29 @@ if choose_analysis == "Chi-square test":
     st.success("Frequency bars are generated:")
     st.markdown("## ")
     fig = plt.figure(figsize=(12, 6))
+    total = float(len(df))
     ax = sns.countplot(x=y_var1, hue=y_var2, data=df, palette="Set2")
-    for p in ax.patches:
-        ax.annotate('{:.0f}'.format(p.get_height()), (p.get_x() + move_counts, p.get_height() + 2))
+    numX=len([x for x in df[y_var1].unique() if x==x])
+
+    # 2. The bars are created in hue order, organize them
+    bars = ax.patches
+    ## 2a. For each X variable
+    for ind in range(numX):
+        ## 2b. Get every hue bar
+        ##     ex. 8 X categories, 4 hues =>
+        ##    [0, 8, 16, 24] are hue bars for 1st X category
+        hueBars=bars[ind:][::numX]
+        ## 2c. Get the total height (for percentages)
+        total = sum([x.get_height() for x in hueBars])
+
+        # 3. Print the percentage on the bars
+        for bar in hueBars:
+            ax.text(bar.get_x() + bar.get_width()/2.,
+                    bar.get_height(),
+                    f'{bar.get_height()}({bar.get_height()/total:.0%})',
+                    ha="center",va="bottom")
+    #for p in ax.patches:
+    #    ax.annotate('{:.0f}%'.format(p.get_height()), (p.get_x() + move_counts, p.get_height() + 2))
     st.pyplot(fig)
 
 if choose_analysis == "Student t-test (Mann-Whitney)":
