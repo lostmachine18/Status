@@ -400,11 +400,10 @@ if choose_analysis == "One, Two-way ANOVA":
             bar.set_width(newwidth)
 
     if show_multiple and y_var2 == "None":
-        ax, test_results = add_stat_annotation(ax, data=df, x=x_var, y=y_var, box_pairs=tuples,
-                                               test='t-test_ind', text_format=pvalue_text, loc=multiple_location)
-    if show_multiple and y_var2 != "None":
-        ax, test_results = add_stat_annotation(ax, data=df, x=x_var, y=y_var, hue=y_var2, box_pairs=tuples,
-                                               test='t-test_ind', text_format=pvalue_text, loc=multiple_location)
+        ax, test_results = add_stat_annotation(ax, data=df, x=x_var, y=y_var, box_pairs=tuples, test='t-test_ind', text_format=pvalue_text, loc=multiple_location)
+  #  if show_multiple and y_var2 != "None":
+   #     ax, test_results = add_stat_annotation(ax, data=df, x=x_var, y=y_var, hue=y_var2, box_pairs=tuples,
+     #                                          test='t-test_ind', text_format=pvalue_text, loc=multiple_location)
 
     st.pyplot(fig)
 
