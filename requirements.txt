@@ -13,3 +13,4 @@ streamlit==0.79.0
 bioinfokit==2.0.2
 openpyxl==3.0.7
 Pillow==8.1.2
+Flask==2.1.0
