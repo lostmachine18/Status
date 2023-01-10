@@ -4,7 +4,7 @@ Markdown==3.3.4
 pandas==1.1.5
 pingouin==0.3.10
 statannot==0.2.3
-statsmodels==0.12.2
+statsmodels==0.13.2
 matplotlib==3.3.4
 numpy==1.19
 seaborn==0.11.1
