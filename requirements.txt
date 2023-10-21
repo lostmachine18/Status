@@ -2,7 +2,7 @@ streamlit_pandas_profiling==0.1.1
 xlrd==2.0.1
 Markdown==3.3.4
 pandas==1.1.5
-pingouin
+pingouin=0.5.3
 statannot==0.2.3
 statsmodels==0.13.2
 matplotlib==3.3.4
